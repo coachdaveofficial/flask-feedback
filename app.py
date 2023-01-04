@@ -1,9 +1,9 @@
-from flask import Flask, request, redirect, render_template, flash, jsonify
+from flask import Flask, request, redirect, render_template, flash, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
 from secret import secret
 from models import db, connect_db, User
 from forms import UserForm, LoginForm
-
+from sqlalchemy.exc import IntegrityError
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///flask-feedback'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -35,12 +35,23 @@ def get_register_form():
     first_name = form.first_name.data
     last_name = form.last_name.data
 
+
     user = User.register(username, password, email, first_name, last_name)
+    
+    
+
     
 
     if user:
-        db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("Username already exists... please try again.", "error")
+            return redirect('/register')
+
+        session["username"] = user.username  # keep logged in
         return redirect('/secret')
 
 @app.route('/login', methods=["GET", "POST"])
@@ -53,13 +64,19 @@ def get_login_form():
    
 
     user = User.authenticate(form.username.data, form.password.data)
+    
+
 
     if user:
-        return user.username
+        session["username"] = user.username  # keep logged in
         return redirect('/secret')
 
         
 
 @app.route('/secret')
 def show_secret():
+    if "username" not in session:
+        flash("You must be logged in to view!")
+        return redirect("/")
+
     return render_template('secret.html')
