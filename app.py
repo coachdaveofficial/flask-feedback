@@ -70,6 +70,9 @@ def get_login_form():
     if user:
         session["username"] = user.username  # keep logged in
         return redirect('/secret')
+    
+    flash("Invalid login... please try again.", "error")
+    return render_template('login.html', form=form)
 
         
 
