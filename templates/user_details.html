@@ -2,19 +2,36 @@
 {% block title %} User Details {% endblock %} 
 
 {% block content %} 
-{% with errors = get_flashed_messages(category_filter=["error"]) %}
-   {% if errors %}
-        {% for message in errors %}
-         <h3 class="text-danger">{{ message }}</h3>
-      {% endfor %}
-   {% endif %}
-{% endwith %}
+<div class="container">
+    <div class="user">
+        <ul>
+            <li>Username: {{user.username}}</li>
+            <li>First Name {{user.first_name}}</li>
+            <li>Last Name {{user.last_name}}</li>
+        </ul>
+               
+        <a href="/logout">Logout</a>
+        <br>
+        <a href="/users/{{user.username}}/feedback/add">Add some feedback</a>
+    </div>
+    
 
-<ul>
-    <li>Username: {{user.username}}</li>
-    <li>First Name {{user.first_name}}</li>
-    <li>Last Name {{user.last_name}}</li>
-</ul>
+    <div class="feedback border">
+        {% if posts %} 
+        {% for post in posts %}
+            <h5>{{post.title}}</h5>
+            <p>{{post.content}}</p>
+            <p>Created by {{post.username}}</p>
+        {% endfor %} 
+        {% else %}
+            No feedback from this user.
+        {% endif %}
+    </div>
+
+    
+
+</div>
+
 
 <a href="/users/{{user.username}}/delete">Delete user</a>
 

@@ -1,9 +1,11 @@
 {% extends 'base.html' %} 
-{% block title %} Login {% endblock %} 
+{% block title %} Add Feedback {% endblock %} 
 
 {% block content %} 
 
-<form id="user-add-form" method="POST">
+<h3>Thank you for the feedback {{user.username}}!</h3>
+
+<form id="feedback-add-form" method="POST">
     {{ form.hidden_tag() }} <!--add type=hidden form fields -->
   
     {% for field in form
@@ -22,7 +24,5 @@
   
     <button type="submit">Submit</button>
   </form>
-
-  <h4>Don't have an account yet? Register <a href="/register">here</a></h4>
 
 {% endblock %}

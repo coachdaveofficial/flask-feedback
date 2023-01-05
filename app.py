@@ -1,8 +1,8 @@
 from flask import Flask, request, redirect, render_template, flash, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
 from secret import secret
-from models import db, connect_db, User
-from forms import UserForm, LoginForm
+from models import db, connect_db, User, Feedback
+from forms import UserForm, LoginForm, FeedbackForm
 from sqlalchemy.exc import IntegrityError
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///flask-feedback'
@@ -37,38 +37,35 @@ def get_register_form():
     first_name = form.first_name.data
     last_name = form.last_name.data
 
-
     user = User.register(username, password, email, first_name, last_name)
-    
-    
-
-    
 
     if user:
         try:
             db.session.add(user)
             db.session.commit()
+            session["username"] = user.username  # keep logged in
+            return redirect(f'/users/{user.username}')
         except IntegrityError:
             db.session.rollback()
             flash("Username already exists... please try again.", "error")
             return redirect('/register')
 
-        session["username"] = user.username  # keep logged in
-        return redirect(f'/users/{user.username}')
+        
 
 @app.route('/login', methods=["GET", "POST"])
 def get_login_form():
+
+    if "username" in session:
+        flash("You are already logged in!", "error")
+        return redirect(f'/users/{session["username"]}')
+
     form = LoginForm()
 
     if not form.validate_on_submit():
         return render_template('login.html', form=form)
     
-   
-
     user = User.authenticate(form.username.data, form.password.data)
     
-
-
     if user:
         session["username"] = user.username  # keep logged in
         return redirect(f'/users/{user.username}')
@@ -76,15 +73,6 @@ def get_login_form():
     flash("Invalid login... please try again.", "error")
     return render_template('login.html', form=form)
 
-        
-
-@app.route('/secret')
-def show_secret():
-    if "username" not in session:
-        flash("You must be logged in to view!")
-        return redirect("/")
-
-    return render_template('secret.html')
 
 @app.route("/logout")
 def logout():
@@ -92,29 +80,56 @@ def logout():
 
     session.pop("username")
 
-    return redirect("/")
+    return redirect("/login")
 
 @app.route('/users/<string:username>')
 def get_user_details(username):
     if "username" not in session:
         flash("You must be logged in to view!", "error")
         return redirect("/login")
+    if session["username"] != username:
+        flash("You do not have access to this page!", "error")
+        return redirect(f'/users/{session["username"]}')
 
     user = User.query.get_or_404(username)
+    posts = Feedback.query.filter_by(username=username).all()
 
-    return render_template('user_details.html', user=user)
+    return render_template('user_details.html', user=user, posts=posts)
+
 
 @app.route('/users/<string:username>/delete')
 def delete_user(username):
-    if "username" not in session or session["username"] != username:
+    if "username" not in session:
         flash("You must be logged in to view!", "error")
         return redirect("/login")
-    
-    user = User.query.get_or_404(username)
+    if session["username"] != username:
+        flash("You do not have access to this page!", "error")
+        return redirect(f'/users/{session["username"]}')
 
+    user = User.query.get_or_404(username)
     db.session.delete(user)
     db.session.commit()
     session.pop("username")
     flash("Successfully deleted user!", "success")
     return redirect('/')
+
+@app.route('/users/<string:username>/feedback/add', methods=["GET", "POST"])
+def get_feedback_form(username):
+    form = FeedbackForm()
+    if "username" not in session:
+        flash("You must be logged in to view!", "error")
+        return redirect("/login")
+    if session["username"] != username:
+        flash("You do not have access to this page!", "error")
+        return redirect(f'/users/{session["username"]}')
     
+    user = User.query.get_or_404(username)    
+    
+    if not form.validate_on_submit():
+        return render_template('add_feedback.html', form=form, user=user)
+    new_feedback = Feedback(title=form.title.data,
+                            content=form.content.data,
+                            username=username)
+    db.session.add(new_feedback)
+    db.session.commit()
+    return redirect(f'/users/{username}')

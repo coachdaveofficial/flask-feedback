@@ -1,0 +1,14 @@
+.container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+
+}
+
+.user {
+    order: 1;
+}
+
+.feedback {
+    order: 2;
+}
