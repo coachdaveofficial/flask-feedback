@@ -133,3 +133,23 @@ def get_feedback_form(username):
     db.session.add(new_feedback)
     db.session.commit()
     return redirect(f'/users/{username}')
+
+@app.route('/feedback/<int:feedback_id>/update', methods=["GET", "POST"])
+def update_feedback(feedback_id):
+    post = Feedback.query.get_or_404(feedback_id)
+
+    if session["username"] != post.username:
+        flash("You do not have access to this page!", "error")
+        return redirect(f'/users/{session["username"]}')
+
+    form = FeedbackForm(obj=post)
+    # user = User.query.get(post.username).one()
+
+    if not form.validate_on_submit():
+        return render_template('edit_feedback.html', form=form, post=post)
+    
+    post.title = form.title.data or None
+    post.content = form.content.data or None
+
+    db.session.commit()
+    return redirect(f'/users/{session["username"]}')
