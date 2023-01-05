@@ -103,3 +103,18 @@ def get_user_details(username):
     user = User.query.get_or_404(username)
 
     return render_template('user_details.html', user=user)
+
+@app.route('/users/<string:username>/delete')
+def delete_user(username):
+    if "username" not in session or session["username"] != username:
+        flash("You must be logged in to view!", "error")
+        return redirect("/login")
+    
+    user = User.query.get_or_404(username)
+
+    db.session.delete(user)
+    db.session.commit()
+    session.pop("username")
+    flash("Successfully deleted user!", "success")
+    return redirect('/')
+    
