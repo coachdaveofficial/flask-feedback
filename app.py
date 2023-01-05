@@ -1,7 +1,7 @@
 from flask import Flask, request, redirect, render_template, flash, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
 from secret import secret
-from models import db, connect_db, User
+from models import db, connect_db, User, Feedback
 from forms import UserForm, LoginForm, FeedbackForm
 from sqlalchemy.exc import IntegrityError
 app = Flask(__name__)
@@ -107,8 +107,11 @@ def get_user_details(username):
         return redirect("/login")
 
     user = User.query.get_or_404(username)
+    posts = Feedback.query.filter_by(username=username).all()
 
-    return render_template('user_details.html', user=user)
+
+
+    return render_template('user_details.html', user=user, posts=posts)
 
 @app.route('/users/<string:username>/feedback/add', methods=["GET", "POST"])
 def get_feedback_form(username):
@@ -121,3 +124,9 @@ def get_feedback_form(username):
     
     if not form.validate_on_submit():
         return render_template('add_feedback.html', form=form, user=user)
+    new_feedback = Feedback(title=form.title.data,
+                            content=form.content.data,
+                            username=username)
+    db.session.add(new_feedback)
+    db.session.commit()
+    return redirect(f'/users/{username}')
