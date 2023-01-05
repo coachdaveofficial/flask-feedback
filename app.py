@@ -59,6 +59,11 @@ def get_register_form():
 
 @app.route('/login', methods=["GET", "POST"])
 def get_login_form():
+
+    if "username" in session:
+        flash("You are already logged in!", "error")
+        return redirect(f'/users/{session["username"]}')
+
     form = LoginForm()
 
     if not form.validate_on_submit():

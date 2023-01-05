@@ -8,6 +8,17 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body class="">
+    {% with errors = get_flashed_messages(category_filter=["error"]) %}
+        {% if errors %}
+                {% set printed_messages = dict() %}
+                {% for message in errors %}
+                    {% if message not in printed_messages %}
+                        <h3 class="text-danger">{{ message }}</h3>
+                        {% set x = printed_messages.__setitem__(message, "value")  %}
+                        {% endif %}   
+                {% endfor %}
+        {% endif %}
+    {% endwith %}
     {% block content %} {% endblock %}
 </body>
 </html>
