@@ -2,7 +2,7 @@ from flask import Flask, request, redirect, render_template, flash, jsonify, ses
 from flask_debugtoolbar import DebugToolbarExtension
 from secret import secret
 from models import db, connect_db, User
-from forms import UserForm, LoginForm
+from forms import UserForm, LoginForm, FeedbackForm
 from sqlalchemy.exc import IntegrityError
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///flask-feedback'
@@ -48,13 +48,14 @@ def get_register_form():
         try:
             db.session.add(user)
             db.session.commit()
+            session["username"] = user.username  # keep logged in
+            return redirect(f'/users/{user.username}')
         except IntegrityError:
             db.session.rollback()
             flash("Username already exists... please try again.", "error")
             return redirect('/register')
 
-        session["username"] = user.username  # keep logged in
-        return redirect(f'/users/{user.username}')
+        
 
 @app.route('/login', methods=["GET", "POST"])
 def get_login_form():
@@ -92,7 +93,7 @@ def logout():
 
     session.pop("username")
 
-    return redirect("/")
+    return redirect("/login")
 
 @app.route('/users/<string:username>')
 def get_user_details(username):
@@ -103,3 +104,15 @@ def get_user_details(username):
     user = User.query.get_or_404(username)
 
     return render_template('user_details.html', user=user)
+
+@app.route('/users/<string:username>/feedback/add', methods=["GET", "POST"])
+def get_feedback_form(username):
+    form = FeedbackForm()
+    if "username" not in session:
+        flash("You must be logged in to view!", "error")
+        return redirect("/login")
+
+    user = User.query.get_or_404(username)
+    
+    if not form.validate_on_submit():
+        return render_template('add_feedback.html', form=form, user=user)
