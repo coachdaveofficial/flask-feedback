@@ -10,8 +10,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
 
 app.config['SECRET_KEY'] = secret
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 debug = DebugToolbarExtension(app)
+
 
 app.app_context().push()
 connect_db(app)
@@ -52,7 +54,7 @@ def get_register_form():
             return redirect('/register')
 
         session["username"] = user.username  # keep logged in
-        return redirect('/secret')
+        return redirect(f'/users/{user.username}')
 
 @app.route('/login', methods=["GET", "POST"])
 def get_login_form():
@@ -69,7 +71,7 @@ def get_login_form():
 
     if user:
         session["username"] = user.username  # keep logged in
-        return redirect('/secret')
+        return redirect(f'/users/{user.username}')
     
     flash("Invalid login... please try again.", "error")
     return render_template('login.html', form=form)
@@ -83,3 +85,21 @@ def show_secret():
         return redirect("/")
 
     return render_template('secret.html')
+
+@app.route("/logout")
+def logout():
+    """Logs user out and redirects to homepage."""
+
+    session.pop("username")
+
+    return redirect("/")
+
+@app.route('/users/<string:username>')
+def get_user_details(username):
+    if "username" not in session:
+        flash("You must be logged in to view!", "error")
+        return redirect("/login")
+
+    user = User.query.get_or_404(username)
+
+    return render_template('user_details.html', user=user)
