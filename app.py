@@ -105,6 +105,9 @@ def get_user_details(username):
     if "username" not in session:
         flash("You must be logged in to view!", "error")
         return redirect("/login")
+    if session["username"] != username:
+        flash("You do not have access to this page!", "error")
+        return redirect(f'/users/{session["username"]}')
 
     user = User.query.get_or_404(username)
     posts = Feedback.query.filter_by(username=username).all()
@@ -119,7 +122,7 @@ def get_feedback_form(username):
     if "username" not in session:
         flash("You must be logged in to view!", "error")
         return redirect("/login")
-
+    
     user = User.query.get_or_404(username)
     
     if not form.validate_on_submit():
