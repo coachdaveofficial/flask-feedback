@@ -37,12 +37,7 @@ def get_register_form():
     first_name = form.first_name.data
     last_name = form.last_name.data
 
-
     user = User.register(username, password, email, first_name, last_name)
-    
-    
-
-    
 
     if user:
         try:
@@ -69,12 +64,8 @@ def get_login_form():
     if not form.validate_on_submit():
         return render_template('login.html', form=form)
     
-   
-
     user = User.authenticate(form.username.data, form.password.data)
     
-
-
     if user:
         session["username"] = user.username  # keep logged in
         return redirect(f'/users/{user.username}')
@@ -82,15 +73,6 @@ def get_login_form():
     flash("Invalid login... please try again.", "error")
     return render_template('login.html', form=form)
 
-        
-
-@app.route('/secret')
-def show_secret():
-    if "username" not in session:
-        flash("You must be logged in to view!")
-        return redirect("/")
-
-    return render_template('secret.html')
 
 @app.route("/logout")
 def logout():
@@ -111,6 +93,8 @@ def get_user_details(username):
 
     user = User.query.get_or_404(username)
     posts = Feedback.query.filter_by(username=username).all()
+
+
 
 
 
