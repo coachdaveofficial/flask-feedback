@@ -153,3 +153,14 @@ def update_feedback(feedback_id):
 
     db.session.commit()
     return redirect(f'/users/{session["username"]}')
+
+@app.route('/feedback/<int:feedback_id>/delete')
+def delete_feedback(feedback_id):
+    post = Feedback.query.get_or_404(feedback_id)
+    if session["username"] != post.username:
+        flash("You do not have access to this page!", "error")
+        return redirect(f'/users/{session["username"]}')
+    db.session.delete(post)
+    db.session.commit()
+    return redirect(f'/users/{session["username"]}')
+

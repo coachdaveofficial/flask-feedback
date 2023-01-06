@@ -10,7 +10,7 @@
 
     <title>{% block title %}{% endblock %}</title>
 </head>
-<body class="">
+<body class="container">
     {% with success_msgs = get_flashed_messages(category_filter=["success"]) %}
    {% if success_msgs %}
         {% for message in success_msgs%}

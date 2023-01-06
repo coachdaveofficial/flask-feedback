@@ -22,7 +22,11 @@
   
     {% endfor %}
   
-    <button type="submit">Submit</button>
+    <button class="btn btn-primary" type="submit">Submit Changes</button>
+    <!-- <a href="/feedback/{{post.id}}/delete">Delete Post</a> -->
+  </form>
+  <form action="/feedback/{{post.id}}/delete" onSubmit="return confirm('Are you sure you wish to delete?');">
+    <button class="btn btn-danger">Delete Post</button>
   </form>
 
 {% endblock %}
